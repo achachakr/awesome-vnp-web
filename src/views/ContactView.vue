@@ -1,38 +1,40 @@
 <template>
   <section class="contact-page">
-    <!-- 상단 이미지 영역 -->
+    <!-- 상단 이미지 -->
     <div class="contact-hero">
       <img src="@/assets/images/etc/awesome-contact-bg.png" alt="Awesome V&P" />
     </div>
-    <h1 ref="titleRef" class="title fade-up">Contact</h1>
+
+    <h1 class="title">Contact</h1>
 
     <div class="contact-container">
       <!-- 회사 정보 -->
-      <div class="info-card">
+      <div class="card info-card">
         <h2>어썸브이앤피</h2>
-        <p><strong>E-mail</strong> awesomevnp2023@gmail.com</p>
-        <p><strong>Phone</strong> 010-2495-3065</p>
-        <p><strong>Address</strong> 서울 관악구 남부순환로 226길 20</p>
-        <p><strong>Business</strong> 공연 · 방송 · 영상 제작 / 운영</p>
+        <p>awesomevnp2023@gmail.com</p>
+        <p>010-2495-3065</p>
+        <p>서울 관악구 남부순환로 226길 20</p>
+        <p>공연 · 방송 · 영상 제작 / 운영</p>
 
-        <!-- 지도 -->
-        <iframe
-          src="https://www.google.com/maps?q=서울시%20관악구%20남부순환로%20226길%2020&output=embed"
-          width="100%"
-          height="250"
-          style="border-radius: 10px; border: none; margin-top: 10px"
-          allowfullscreen=""
-          loading="lazy"
-        ></iframe>
+        <!-- 지도 (반응형) -->
+        <div class="map-wrap">
+          <iframe
+            title="Awesome VNP Map"
+            src="https://www.google.com/maps?q=서울시%20관악구%20남부순환로%20226길%2020&output=embed"
+            loading="lazy"
+            allowfullscreen
+          ></iframe>
+        </div>
       </div>
 
       <!-- 문의 폼 -->
-      <div class="form-card">
+      <div class="card form-card">
         <h2>문의하기</h2>
-        <form>
+        <form @submit.prevent>
           <input type="text" placeholder="이름" required />
           <input type="email" placeholder="이메일" required />
           <textarea
+            rows="6"
             placeholder="프로젝트 개요, 일정, 예산, 협업 범위를 간단히 적어주세요."
             required
           ></textarea>
@@ -44,125 +46,139 @@
 </template>
 
 <script setup>
-// 현재 정적 구성으로 별도 JS 없음
+// 스크립트 로직 없음
 </script>
 
 <style scoped>
+/* 페이지 기본 */
 .contact-page {
-  background-color: #000;
+  background: #000;
   min-height: 100vh;
   padding-top: clamp(80px, 12vh, 160px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  padding-bottom: 80px;
 }
 
-/* 상단 이미지 */
+/* 상단 비주얼 */
 .contact-hero {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto 60px;
   display: flex;
   justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto 36px;
+  padding: 0 16px;
 }
 .contact-hero img {
   width: 100%;
   max-width: 800px;
   height: auto;
   object-fit: contain;
-  animation: fadeIn 1.2s ease-out;
+  animation: fadeIn 1.2s ease-out both;
 }
 
+/* 타이틀 */
 .title {
   text-align: center;
+  color: #fff;
   font-weight: 800;
   letter-spacing: 0.02em;
   font-size: clamp(1.6rem, 4.4vw, 2.4rem);
-  margin-bottom: clamp(18px, 3vmin, 28px);
+  margin: 0 0 clamp(18px, 3vmin, 28px);
 }
 
-/* 본문 컨테이너 */
+/* === 핵심: 가운데 그리드 레이아웃 ===
+   - 2열(PC), 1열(모바일)
+   - 그리드를 '가운데'에 배치 (justify-content:center)
+*/
 .contact-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 40px;
-  max-width: 1100px;
-  width: 90%;
-  margin: 0 auto 80px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 520px));
+  gap: 32px;
+  justify-content: center; /* 그리드 자체를 수평 중앙 정렬 */
+  align-content: start;
+  width: 100%;
+  max-width: 1140px; /* 520*2 + gap */
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
-/* 정보 카드 */
-.info-card,
-.form-card {
-  background-color: #141414;
-  padding: 28px;
-  border-radius: 12px;
-  flex: 1 1 400px;
-  max-width: 500px;
+/* 카드 공통 */
+.card {
+  background: #141414;
   color: #fff;
+  border-radius: 12px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #222;
+  padding: 24px;
+  text-align: center;
 }
-.info-card:hover,
-.form-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-}
-
-.info-card h2 {
-  margin-bottom: 12px;
+.card h2 {
+  margin: 0 0 12px;
   font-weight: 700;
 }
 
-/* 문의 폼 */
+/* 지도 반응형 박스 (aspect-ratio) */
+.map-wrap {
+  margin-top: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 0;
+  aspect-ratio: 16 / 10;
+  background: #0f0f0f;
+}
+.map-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* 폼: 중앙 정렬 + 오버플로 방지 */
 .form-card form {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  width: 100%;
 }
-
 .form-card input,
 .form-card textarea {
-  background-color: #1b1b1b;
+  width: 100%;
+  box-sizing: border-box; /* 오버플로 방지 */
+  background: #1b1b1b;
   color: #fff;
   border: 1px solid #333;
   border-radius: 8px;
-  padding: 12px;
-  font-size: 15px;
-  width: 100%;
+  padding: 12px 14px;
+  font-size: 16px; /* iOS 확대 방지 */
   resize: none;
+  text-align: center; /* 가운데 정렬 */
 }
-
 .form-card input::placeholder,
 .form-card textarea::placeholder {
-  color: #888;
+  color: #9aa0aa;
+  text-align: center;
 }
 
 .form-card button {
-  background-color: #3182f6;
-  border: none;
-  color: #fff;
-  font-weight: 600;
+  width: 100%;
+  height: 44px;
+  border: 0;
   border-radius: 8px;
-  padding: 12px 0;
   cursor: pointer;
-  transition: background-color 0.3s;
+  background: #3182f6;
+  color: #fff;
+  font-weight: 700;
+  transition: filter 0.2s ease, transform 0.2s ease;
 }
-
 .form-card button:hover {
-  background-color: #1e6fe2;
+  filter: brightness(1.07);
+  transform: translateY(-1px);
 }
 
-/* 반응형 */
-@media (max-width: 768px) {
-  .contact-hero img {
-    max-width: 280px;
-  }
+/* 반응형: 모바일 1열, 카드 폭 통일 */
+@media (max-width: 900px) {
   .contact-container {
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    max-width: 350px; /* 모바일에서 너무 넓지 않게 */
   }
 }
 

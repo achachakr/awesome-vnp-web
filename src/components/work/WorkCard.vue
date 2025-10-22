@@ -1,134 +1,206 @@
 <template>
-  <article class="card" @click="onTap" :aria-pressed="showMeta.toString()">
-    <img :src="src" :alt="title" loading="lazy" />
+  <article
+    class="card"
+    :class="{ active }"
+    @click="onTap"
+    :aria-pressed="String(active)"
+  >
+    <img class="poster" :src="image" :alt="name" loading="lazy" />
 
-    <!-- 정보 오버레이 -->
-    <div class="meta" :class="{ show: showMeta }">
-      <h3 class="title">{{ title }}</h3>
-      <p class="date">{{ formattedDate }}</p>
+    <div class="overlay">
+      <div class="credits">
+        <h3 class="name">{{ name }}</h3>
+        <p class="date">{{ dateText }}</p>
+
+        <div class="roll-mask">
+          <div class="roll-track" :class="{ running: active }">
+            <ul class="roll-list">
+              <li v-for="(line, i) in work" :key="i">{{ line }}</li>
+            </ul>
+            <ul class="roll-list clone">
+              <li v-for="(line, i) in work" :key="'c' + i">{{ line }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </article>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { computed, onMounted } from "vue";
 
 const props = defineProps({
-  src: { type: String, required: true },
-  title: { type: String, required: true },
-  date: { type: String, required: true }, // "YYYY-MM-DD"
+  id: { type: [String, Number], required: true },
+  image: { type: String, required: true },
+  name: { type: String, required: true },
+  start: { type: String, required: true }, // YYYY-MM-DD
+  end: { type: String, default: "" }, // YYYY-MM-DD (optional)
+  work: { type: Array, required: true }, // ['라인1','라인2',...]
+  active: { type: Boolean, default: false }, // 부모 제어
 });
 
-/**
- * 모바일(hover: none)에서 탭하면 오버레이 토글
- * 데스크톱(hover: hover)에서는 CSS :hover 처리
- */
-const showMeta = ref(false);
-let isTouchEnv = false;
+const emit = defineEmits(["toggle"]);
 
-const onTap = () => {
-  if (isTouchEnv) showMeta.value = !showMeta.value;
-};
-
+let isTouch = false;
 onMounted(() => {
-  // 터치/모바일 환경 감지
-  isTouchEnv = window.matchMedia("(hover: none)").matches;
+  isTouch = matchMedia("(hover: none)").matches;
 });
 
-/* YYYY.MM.DD 포맷 */
-const formattedDate = computed(() => {
-  const d = new Date(props.date);
-  if (isNaN(d)) return props.date;
+function onTap() {
+  if (isTouch) emit("toggle", props.id);
+}
+
+const fmt = (s) => {
+  const d = new Date(s);
+  if (isNaN(d)) return s;
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${y}.${m}.${dd}`;
-});
+};
+const dateText = computed(() =>
+  props.end ? `${fmt(props.start)} - ${fmt(props.end)}` : fmt(props.start)
+);
 </script>
 
 <style scoped>
 .card {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 4; /* 포스터 비율 고정 */
+  aspect-ratio: 3/4;
   overflow: hidden;
 
-  background: #16171c; /* 로딩 배경 */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: #121318;
   cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
-
-.card img {
+.poster {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
   display: block;
-  transition: transform 0.35s ease, filter 0.35s ease;
-  -webkit-user-drag: none;
-  user-select: none;
+  transition: transform 0.45s ease, filter 0.45s ease, opacity 0.45s ease;
 }
-
-/* 공통 오버레이 기본 상태: 숨김 */
-.meta {
+.overlay {
   position: absolute;
   inset: 0;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.84);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  text-align: center;
-  color: #fff;
-  padding: 12px;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.12),
-    rgba(0, 0, 0, 0.45)
-  );
-  backdrop-filter: blur(2px);
-
   opacity: 0;
-  visibility: hidden;
-  transform: translateY(6px);
-  transition: opacity 0.22s ease, visibility 0.22s ease, transform 0.22s ease;
+  transition: opacity 0.3s ease;
+  padding: 16px;
 }
-
-.title {
-  font-weight: 800;
+.credits {
+  width: min(92%, 440px);
+  text-align: center;
+}
+.name {
+  margin: 0 0 6px;
+  font-weight: 900;
   letter-spacing: 0.02em;
-  line-height: 1.25;
-  font-size: clamp(12px, 1.6vw, 18px);
+  font-size: clamp(14px, 1.8vw, 20px);
+  line-height: 1.2;
 }
 .date {
-  opacity: 0.9;
-  font-size: clamp(11px, 1.2vw, 14px);
+  margin: 0 0 10px;
+  opacity: 0.92;
+  font-size: clamp(12px, 1.4vw, 14px);
 }
 
-/* 데스크톱: 마우스 오버 시 표시 */
+/* 롤링 */
+.roll-mask {
+  position: relative;
+  overflow: hidden;
+  height: 96px;
+  margin-top: 6px;
+
+  /* 중앙(#fff)=보임, 위/아래 transparent=가림 */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #fff 18%,
+    #fff 82%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #fff 18%,
+    #fff 82%,
+    transparent 100%
+  );
+}
+.roll-track {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0);
+  animation: rollUp 10s linear infinite;
+  animation-play-state: paused; /* 기본 멈춤 */
+  will-change: transform;
+}
+.roll-track.running {
+  animation-play-state: running;
+} /* 활성화 시 재생 */
+
+.roll-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.roll-list li {
+  line-height: 1.6;
+  font-size: clamp(12px, 1.5vw, 15px);
+  opacity: 0.96;
+}
+
+/* 데스크톱: hover 시 활성화 */
 @media (hover: hover) {
-  .card:hover img {
-    transform: scale(1.045);
-    filter: brightness(1.05);
+  .card:hover .poster {
+    transform: scale(1.065);
+    filter: blur(3px) brightness(0.86);
   }
-  .card:hover .meta {
+  .card:hover .overlay {
     opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+  }
+  .card:hover .roll-track {
+    animation-play-state: running;
   }
 }
 
-/* 모바일(터치): 탭하여 토글된 경우에만 표시 */
+/* 모바일: active 클래스(부모 제어) */
 @media (hover: none) {
-  .meta.show {
+  .card.active .poster {
+    transform: scale(1.065);
+    filter: blur(3px) brightness(0.86);
+  }
+  .card.active .overlay {
     opacity: 1;
-    visibility: visible;
+  }
+  /* .roll-track.running 는 위에서 처리 */
+}
+
+/* 무한 루프 */
+@keyframes rollUp {
+  0% {
     transform: translateY(0);
   }
-  /* 탭 피드백 */
-  .card:active img {
-    transform: scale(1.025);
-    filter: brightness(1.04);
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+/* 모션 최소화 */
+@media (prefers-reduced-motion: reduce) {
+  .poster,
+  .overlay {
+    transition: none;
+  }
+  .roll-track {
+    animation: none;
   }
 }
 </style>
