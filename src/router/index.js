@@ -17,6 +17,12 @@ const routes = [
     component: () => import("@/views/WorkView.vue"),
   },
   {
+    path: "/work/:id",
+    name: "work-detail",
+    component: () => import("@/views/WorkDetailView.vue"),
+    props: true,
+  },
+  {
     path: "/contact",
     name: "contact",
     component: () => import("@/views/ContactView.vue"),

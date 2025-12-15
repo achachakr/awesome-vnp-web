@@ -2,7 +2,7 @@
   <article
     class="card"
     :class="{ active }"
-    @click="onTap"
+    @click="goDetail"
     :aria-pressed="String(active)"
   >
     <img class="poster" :src="image" :alt="name" loading="lazy" />
@@ -29,6 +29,7 @@
 
 <script setup>
 import { computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
   id: { type: [String, Number], required: true },
@@ -41,6 +42,19 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["toggle"]);
+
+const router = useRouter();
+
+const periodText = computed(() => {
+  if (!props.start && !props.end) return "";
+  if (props.start && !props.end) return props.start;
+  if (!props.start && props.end) return props.end;
+  return `${props.start} ~ ${props.end}`;
+});
+
+function onToggle() {
+  emit("toggle", props.id);
+}
 
 let isTouch = false;
 onMounted(() => {
@@ -62,6 +76,14 @@ const fmt = (s) => {
 const dateText = computed(() =>
   props.end ? `${fmt(props.start)} - ${fmt(props.end)}` : fmt(props.start)
 );
+
+function goDetail() {
+  // 상세 페이지로 이동
+  router.push({
+    name: "work-detail",
+    params: { id: props.id },
+  });
+}
 </script>
 
 <style scoped>
