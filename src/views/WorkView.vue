@@ -2,7 +2,7 @@
   <section class="work">
     <div class="grid">
       <WorkCard
-        v-for="item in posters"
+        v-for="item in displayPosters"
         :key="item.id"
         :id="item.id"
         :image="item.src"
@@ -27,6 +27,10 @@ const activeId = ref(null);
 
 /** 백엔드에서 받아올 포스터 목록 */
 const posters = ref([]);
+
+const displayPosters = computed(() => {
+  return [...posters].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+});
 
 /** 데스크톱/모바일 구분 */
 function detectTouch() {
