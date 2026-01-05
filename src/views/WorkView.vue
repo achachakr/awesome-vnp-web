@@ -2,8 +2,8 @@
   <section class="work">
     <div class="grid">
       <WorkCard
-        v-for="item in displayPosters"
-        :key="item.id"
+        v-for="(item, idx) in displayPosters"
+        :key="`${item.id}-${idx}`"
         :id="item.id"
         :image="item.src"
         :name="item.name"
