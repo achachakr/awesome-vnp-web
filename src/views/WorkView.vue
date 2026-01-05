@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import WorkCard from "@/components/work/WorkCard.vue";
 
 /** 터치 환경 여부 + 활성 카드 id */
@@ -29,7 +29,9 @@ const activeId = ref(null);
 const posters = ref([]);
 
 const displayPosters = computed(() => {
-  return [...posters].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+  // posters.value가 배열이 아니면 빈 배열로 처리
+  const arr = Array.isArray(posters.value) ? posters.value : [];
+  return [...arr].sort((a, b) => (b.id ?? 0) - (a.id ?? 0)); // id 큰 게 먼저
 });
 
 /** 데스크톱/모바일 구분 */
@@ -57,18 +59,22 @@ async function fetchWorks() {
 
     const data = await res.json();
 
-    posters.value = data.map((w) => {
+    // ✅ 배열 또는 Page(content) 모두 대응
+    const list = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.content)
+        ? data.content
+        : [];
+
+    posters.value = list.map((w) => {
       const start = w.startDate ?? w.start_date ?? null;
       const end = w.endDate ?? w.end_date ?? null;
       const posterUrl = w.posterUrl ?? w.poster_url ?? "";
 
       let workList = [];
-      // roles 배열로 오는 경우
       if (Array.isArray(w.roles)) {
         workList = w.roles;
-      }
-      // roleJson / role_json 이 JSON 문자열인 경우
-      else if (typeof (w.roleJson ?? w.role_json) === "string") {
+      } else if (typeof (w.roleJson ?? w.role_json) === "string") {
         try {
           workList = JSON.parse(w.roleJson ?? w.role_json);
         } catch (e) {
